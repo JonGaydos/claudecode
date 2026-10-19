@@ -15,6 +15,16 @@ RUN apt-get update \
       python3 python3-venv tzdata \
     && rm -rf /var/lib/apt/lists/*
 
+# GitHub CLI from GitHub's own apt repository (Debian's gh is far behind). Sign in once with
+# `gh auth login`; the login is kept in the persisted home.
+RUN curl -fsSL --proto '=https' -o /usr/share/keyrings/githubcli-archive-keyring.gpg \
+      https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+      > /etc/apt/sources.list.d/github-cli.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends gh \
+    && rm -rf /var/lib/apt/lists/*
+
 # uv, for Python scripts with inline dependencies (vault.py and friends).
 COPY --from=ghcr.io/astral-sh/uv:0.12.19 /uv /uvx /usr/local/bin/
 

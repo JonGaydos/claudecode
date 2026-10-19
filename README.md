@@ -5,7 +5,7 @@ Remote Control in server mode.
 
 ## How it works
 
-- **Image**: Debian (Node 24 slim) with tmux, git, ssh, curl, jq, ripgrep, Python, uv and supercronic.
+- **Image**: Debian (Node 24 slim) with tmux, git, gh, ssh, curl, jq, ripgrep, Python, uv and supercronic.
   Rebuilt weekly by GitHub Actions and published to `ghcr.io/jongaydos/claudecode`, so Unraid
   shows an update when the base OS has security fixes.
 - **Claude Code**: not in the image. On first start, `start.sh` installs it with Anthropic's official
@@ -48,6 +48,8 @@ Remote Control in server mode.
 
 4. Restart the container. From then on it starts the Remote Control server by itself, and the
    session appears in the Claude app.
+5. Optional: `gh auth login` in the console (GitHub.com, HTTPS, login with a web browser) so Claude
+   can work with GitHub. The login is kept in the Home folder.
 
 ## Updating
 
