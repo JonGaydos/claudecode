@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>claude-code</Name>
+  <Repository>ghcr.io/jongaydos/claudecode:latest</Repository>
+  <Registry>https://github.com/JonGaydos/claudecode/pkgs/container/claudecode</Registry>
+  <Network>bridge</Network>
+  <Shell>bash</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/JonGaydos/claudecode</Support>
+  <Project>https://github.com/JonGaydos/claudecode</Project>
+  <Overview>Always-on Claude Code, reachable from the Claude app through Remote Control (server mode). Claude Code installs into the Home folder on first start and updates itself. Home holds the login, settings, CLAUDE.md, skills and scripts; Projects is the working folder. Both folders must be owned by 99:100.</Overview>
+  <Category>Tools: Productivity:</Category>
+  <WebUI/>
+  <Icon>https://claude.ai/images/claude_app_icon.png</Icon>
+  <ExtraParams>--user 99:100 --hostname claude-code --restart unless-stopped --cap-drop ALL --security-opt no-new-privileges --cpus=2 --memory=4g</ExtraParams>
+  <PostArgs/>
+  <CPUset/>
+  <Requires/>
+  <Config Name="Home" Target="/home/claude" Default="/mnt/user/appdata/claude-code/home" Mode="rw" Description="Login, settings, CLAUDE.md, skills, scripts, key files and Claude Code itself" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/claude-code/home</Config>
+  <Config Name="Projects" Target="/projects" Default="/mnt/user/appdata/claude-code/projects" Mode="rw" Description="Working folder for sessions" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/claude-code/projects</Config>
+  <Config Name="Remote Control name" Target="RC_NAME" Default="unraid" Mode="" Description="Prefix for session names in the Claude app" Type="Variable" Display="always" Required="false" Mask="false">unraid</Config>
+  <Config Name="Timezone" Target="TZ" Default="America/Chicago" Mode="" Description="Timezone for scheduled jobs and logs" Type="Variable" Display="always" Required="false" Mask="false">America/Chicago</Config>
+</Container>
