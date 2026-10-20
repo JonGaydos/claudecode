@@ -14,7 +14,13 @@ RUN apt-get update \
       ca-certificates curl git openssh-client tmux tini jq ripgrep less procps \
       python3 python3-venv tzdata \
       iputils-ping dnsutils netcat-openbsd iproute2 traceroute nmap mosquitto-clients ffmpeg \
+      libcap2-bin \
     && rm -rf /var/lib/apt/lists/*
+
+# Debian gives ping the cap_net_raw file capability, which the container's --cap-drop ALL and
+# no-new-privileges refuse to exec ("Operation not permitted"). Without it, ping uses unprivileged
+# ICMP sockets, which Docker allows (net.ipv4.ping_group_range covers every group).
+RUN setcap -r /usr/bin/ping
 
 # GitHub CLI from GitHub's own apt repository (Debian's gh is far behind). Sign in once with
 # `gh auth login`; the login is kept in the persisted home.
