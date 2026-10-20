@@ -5,7 +5,7 @@ Remote Control in server mode.
 
 ## How it works
 
-- **Image**: Debian (Node 24 slim) with tmux, git, gh, ssh, curl, jq, ripgrep, Python, uv and supercronic.
+- **Image**: Debian (Node 24 slim) with tmux, git, gh, ssh, curl, jq, ripgrep, Python, uv and supercronic, plus network and media tools (ping, dig, nc, ip, traceroute, nmap, mosquitto clients, ffmpeg).
   Rebuilt weekly by GitHub Actions and published to `ghcr.io/jongaydos/claudecode`, so Unraid
   shows an update when the base OS has security fixes.
 - **Claude Code**: not in the image. On first start, `start.sh` installs it with Anthropic's official

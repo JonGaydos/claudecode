@@ -13,6 +13,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
       ca-certificates curl git openssh-client tmux tini jq ripgrep less procps \
       python3 python3-venv tzdata \
+      iputils-ping dnsutils netcat-openbsd iproute2 traceroute nmap mosquitto-clients ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
 # GitHub CLI from GitHub's own apt repository (Debian's gh is far behind). Sign in once with
