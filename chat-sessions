@@ -1,0 +1,98 @@
+#!/usr/bin/env python3
+"""Keeps Remote Control chats across container restarts.
+
+  chat-sessions reattach   resume each chat with a message in the last CHAT_KEEP_DAYS days as its
+                           own Remote Control session, one tmux window each in session 'main'
+  chat-sessions prune      delete the saved history of chats whose last message is older than that
+
+A chat is a transcript under ~/.claude/projects with at least one message typed by a person, so
+scheduled `claude -p` runs are left alone. Its age is the time of the last such message: resuming
+a chat appends to its transcript, so the file's modified time says nothing.
+"""
+import glob
+import json
+import os
+import shlex
+import shutil
+import subprocess
+import sys
+import time
+from datetime import datetime
+
+KEEP_DAYS = int(os.environ.get("CHAT_KEEP_DAYS", "14"))
+# Each reattached chat is a Claude process of about 200 MB, and the container is capped at 4 GB.
+MAX_REATTACH = int(os.environ.get("CHAT_MAX_REATTACH", "8"))
+CLAUDE_DIR = os.path.expanduser("~/.claude")
+
+
+def prompt_text(record):
+    content = record["message"]["content"]
+    if isinstance(content, str):
+        return content
+    return " ".join(b.get("text", "") for b in content if isinstance(b, dict))
+
+
+def chats():
+    for path in glob.glob(f"{CLAUDE_DIR}/projects/*/*.jsonl"):
+        cwd = first = last = None
+        with open(path, encoding="utf-8", errors="replace") as f:
+            for line in f:
+                try:
+                    record = json.loads(line)
+                except ValueError:
+                    continue
+                cwd = cwd or record.get("cwd")
+                if record.get("type") == "user" and (record.get("origin") or {}).get("kind") == "human":
+                    last = record["timestamp"]
+                    if first is None:
+                        first = prompt_text(record)
+        if last:
+            age = (time.time() - datetime.fromisoformat(last.replace("Z", "+00:00")).timestamp()) / 86400
+            session_id = os.path.basename(path)[:-len(".jsonl")]
+            yield {"id": session_id, "path": path, "cwd": cwd, "first": first, "age_days": age}
+
+
+def names_set_by_hand():
+    names = {}
+    for path in glob.glob(f"{CLAUDE_DIR}/sessions/*.json"):
+        try:
+            with open(path) as f:
+                record = json.load(f)
+        except (OSError, ValueError):
+            continue
+        if record.get("nameSource") == "user":
+            names[record["sessionId"]] = record["name"]
+    return names
+
+
+def window(chat):
+    return f"chat-{chat['id'][:8]}"
+
+
+def reattach():
+    names = names_set_by_hand()
+    recent = sorted((c for c in chats() if c["age_days"] <= KEEP_DAYS and c["cwd"] and os.path.isdir(c["cwd"])),
+                    key=lambda c: c["age_days"])
+    for chat in recent[:MAX_REATTACH]:
+        name = names.get(chat["id"]) or " ".join(chat["first"].split())[:40] or chat["id"][:8]
+        command = shlex.join(["claude", "--resume", chat["id"], "--remote-control", name])
+        subprocess.run(["tmux", "new-window", "-d", "-t", "main:", "-n", window(chat), "-c", chat["cwd"], command])
+        print(f"Reattached chat: {name}")
+    for chat in recent[MAX_REATTACH:]:
+        print(f"Not reattached (over {MAX_REATTACH}): {chat['id']}")
+
+
+def prune():
+    for chat in chats():
+        if chat["age_days"] > KEEP_DAYS:
+            subprocess.run(["tmux", "kill-window", "-t", f"main:{window(chat)}"], stderr=subprocess.DEVNULL)
+            os.remove(chat["path"])
+            shutil.rmtree(chat["path"][:-len(".jsonl")], ignore_errors=True)
+            print(f"Deleted chat {chat['id']} (last message {chat['age_days']:.0f} days ago)")
+
+
+if __name__ == "__main__":
+    commands = {"reattach": reattach, "prune": prune}
+    if len(sys.argv) != 2 or sys.argv[1] not in commands:
+        sys.exit("usage: chat-sessions reattach|prune")
+    commands[sys.argv[1]]()

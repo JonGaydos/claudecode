@@ -36,6 +36,9 @@ tmux new-session -d -s main -c /projects -e "RC_NAME=$RC_NAME" \
   'claude remote-control --remote-control-session-name-prefix "$RC_NAME"; exec bash'
 echo "Claude Code Remote Control started in tmux session 'main' (attach: tmux attach -t main)"
 
+# Chats from the last 14 days come back as live Remote Control sessions, one tmux window each.
+chat-sessions reattach || echo "Reattaching chats failed" >&2
+
 trap 'tmux kill-server 2>/dev/null; exit 0' TERM INT
 while tmux has-session -t =main 2>/dev/null; do
   sleep 5 &

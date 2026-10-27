@@ -13,6 +13,11 @@ Remote Control in server mode.
   effect the next time Claude starts (container restart or update).
 - **Session**: `claude remote-control` (server mode) runs in tmux session `main`, from `/projects`.
   The Claude app can start new sessions on demand; names start with `RC_NAME`.
+- **Chats across restarts**: `chat-sessions reattach` runs at start and resumes each chat with a
+  message in the last 14 days (newest 8 at most) as its own Remote Control session, in a tmux
+  window `chat-<id>`. The app shows it as a new session with the same history. Add
+  `30 4 * * * chat-sessions prune` to `$HOME/crontab` to delete the history of chats whose last
+  message is older than 14 days. `CHAT_KEEP_DAYS` and `CHAT_MAX_REATTACH` change the limits.
 - **Scheduled jobs**: if `$HOME/crontab` exists, supercronic runs it, for example
   `10 3 * * * cd /projects && claude -p "..."`.
 - **Security**: runs as 99:100, all capabilities dropped, `no-new-privileges`, bridge network, no

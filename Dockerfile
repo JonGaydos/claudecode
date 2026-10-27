@@ -43,7 +43,7 @@ RUN curl -fsSL --proto '=https' -o /usr/local/bin/supercronic \
     && echo "${SUPERCRONIC_SHA256}  /usr/local/bin/supercronic" | sha256sum -c - \
     && chmod 755 /usr/local/bin/supercronic
 
-COPY --chmod=755 start.sh /usr/local/bin/start.sh
+COPY --chmod=755 start.sh chat-sessions /usr/local/bin/
 
 # An account for Unraid's 99:100 (gid 100 is Debian's "users"); ssh and git refuse to run for a uid
 # with no passwd entry.
